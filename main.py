@@ -15,14 +15,14 @@ def main_all():
     # TODO: Complete function
 
 def main_precomputed_covariance():
-    covXX = np.load("covariance_matrices/avgCovXX.npy")
+    covXX = np.load("covariance_matrices/avgCovXX.npy") + np.load("covariance_matrices/avgCovYY.npy")
     covXY = np.load("covariance_matrices/avgCovXY.npy")
     covXX = np.expand_dims(covXX, 0)
     covXY = np.expand_dims(covXY, 0)
 
     obj_func = symmetric_kl_objective
     grad_func = grad_symmetric_kl_obj
-    tol = 1e-5
+    tol = 1e-3
     n_iter = 20
     ls_niter = 20
     ksf = KLDivergenceSpatialFilter("kl_div", obj_func, grad_func, tol, n_iter, ls_niter, verbose=True)

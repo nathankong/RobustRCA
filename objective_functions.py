@@ -15,7 +15,8 @@ def symmetric_kl_objective(R, Sigma1, Sigma2, d):
     assert Sigma1.shape == Sigma2.shape
     #assert P.shape == Sigma1[0].shape
     assert R.shape[0] == R.shape[1] # Check if square
-    assert np.allclose(np.dot(R, R.T), np.eye(R.shape[0])) # Check orthogonality
+    #print np.diag(np.dot(R, R.T))
+    assert np.allclose(np.dot(R, R.T), np.eye(R.shape[0]), atol=1e-5) # Check orthogonality
     Sigma1 = Sigma1[0]
     Sigma2 = Sigma2[0]
 
@@ -47,7 +48,7 @@ def grad_symmetric_kl_obj(R, Sigma1, Sigma2, d):
     assert Sigma1.shape == Sigma2.shape
     #assert P.shape == Sigma1[0].shape
     assert R.shape[0] == R.shape[1]
-    assert np.allclose(np.dot(R, R.T), np.eye(R.shape[0])) # Check orthogonality
+    assert np.allclose(np.dot(R, R.T), np.eye(R.shape[0]), atol=1e-5) # Check orthogonality
     Sigma1 = Sigma1[0]
     Sigma2 = Sigma2[0]
 
