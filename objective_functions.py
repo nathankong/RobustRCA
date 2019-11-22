@@ -15,8 +15,9 @@ def symmetric_kl_objective(R, Sigma1, Sigma2, d):
     assert Sigma1.shape == Sigma2.shape
     #assert P.shape == Sigma1[0].shape
     assert R.shape[0] == R.shape[1] # Check if square
-    #print np.diag(np.dot(R, R.T))
-    assert np.allclose(np.dot(R, R.T), np.eye(R.shape[0]), atol=1e-5) # Check orthogonality
+    #print np.dot(R, R.T)
+    #print R.shape
+    #assert np.allclose(np.dot(R, R.T), np.eye(R.shape[0]), atol=0.05) # Check orthogonality
     Sigma1 = Sigma1[0]
     Sigma2 = Sigma2[0]
 
@@ -24,7 +25,7 @@ def symmetric_kl_objective(R, Sigma1, Sigma2, d):
 
     Id = np.eye(D, D)
     Id = Id[:d, :] # Truncated identity
-    V = R.T
+    V = R
     V_trunc = np.dot(Id, V) # Truncate rotation matrix
 
     Sigma1_term = left_right_multiply_covariance_2d(Sigma1, V_trunc)
@@ -37,7 +38,7 @@ def symmetric_kl_objective(R, Sigma1, Sigma2, d):
     obj = 0.5 * np.trace(np.dot(inv_Sigma1, Sigma2_term) + np.dot(inv_Sigma2, Sigma1_term)) - d
     return obj
 
-def grad_symmetric_kl_obj(R, Sigma1, Sigma2, d):
+def grad_symmetric_kl_obj(R, P, Sigma1, Sigma2, d):
     # Computes gradient matrix for symmetric KL objective function.
     # Parameters:
     #     R: rotation matrix (num_features, num_features)
@@ -48,20 +49,19 @@ def grad_symmetric_kl_obj(R, Sigma1, Sigma2, d):
     assert Sigma1.shape == Sigma2.shape
     #assert P.shape == Sigma1[0].shape
     assert R.shape[0] == R.shape[1]
-    assert np.allclose(np.dot(R, R.T), np.eye(R.shape[0]), atol=1e-5) # Check orthogonality
+    #assert np.allclose(np.dot(R, R.T), np.eye(R.shape[0]), atol=1e-4) # Check orthogonality
     Sigma1 = Sigma1[0]
     Sigma2 = Sigma2[0]
 
     D = Sigma1.shape[0]
     Id = np.eye(D, D)
     Id = Id[:d, :] # Truncated identity
-    V = R.T
-    V_trunc = np.dot(Id, V) # Truncate rotation matrix
+    V_trunc = np.dot(Id, R) # Truncate rotation matrix
 
-    Sigma1_bar = left_right_multiply_covariance_2d(Sigma1, V_trunc)
-    Sigma2_bar = left_right_multiply_covariance_2d(Sigma2, V_trunc)
-    Sigma1_tilde = Sigma1
-    Sigma2_tilde = Sigma2
+    Sigma1_tilde = left_right_multiply_covariance_2d(Sigma1, P)
+    Sigma2_tilde = left_right_multiply_covariance_2d(Sigma2, P)
+    Sigma1_bar = left_right_multiply_covariance_2d(Sigma1_tilde, V_trunc)
+    Sigma2_bar = left_right_multiply_covariance_2d(Sigma2_tilde, V_trunc)
     inv_Sigma1_bar = np.linalg.inv(Sigma1_bar)
     inv_Sigma2_bar = np.linalg.inv(Sigma2_bar)
 

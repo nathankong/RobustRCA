@@ -23,7 +23,7 @@ def main_precomputed_covariance():
     obj_func = symmetric_kl_objective
     grad_func = grad_symmetric_kl_obj
     tol = 1e-3
-    n_iter = 20
+    n_iter = 500
     ls_niter = 20
     ksf = KLDivergenceSpatialFilter("kl_div", obj_func, grad_func, tol, n_iter, ls_niter, verbose=True)
     V_star = ksf.compute_spatial_filter(covXY, covXX, d=3)
@@ -31,6 +31,6 @@ def main_precomputed_covariance():
 
 
 if __name__ == "__main__":
-    np.random.seed(0)
+    np.random.seed(2)
     main_precomputed_covariance()
 

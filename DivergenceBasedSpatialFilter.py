@@ -41,6 +41,8 @@ class KLDivergenceSpatialFilter(DivergenceFrameworkSpatialFiltering):
         P = fractional_matrix_power(Sigma1 + Sigma2 + (np.eye(Sigma1.shape[0])*1e-10), -0.5) # TODO: P should be symmetric. check.
         R = generate_random_rotation_matrix(n_features)
 
+        print P
+
         # Whiten the covariances
         wSigma1 = left_right_multiply_covariance(tSigma1, P)
         wSigma2 = left_right_multiply_covariance(tSigma2, P)
@@ -49,24 +51,18 @@ class KLDivergenceSpatialFilter(DivergenceFrameworkSpatialFiltering):
 
         prev_obj_value = np.finfo(np.float).min
         for i in range(self.n_iter):
-            if self.verbose:
-                print "Iteration {}/{}; Objective: {}".format(i+1, self.n_iter, prev_obj_value)
 
-            # TODO: Figure out what covariances should be used in the objective.
             obj_value = self.objective_func(R, wSigma1, wSigma2, d)
-
-            print obj_value
-
-            gradient = self.gradient_func(R, tSigma1, tSigma2, d)
-            t = self._compute_optimal_step_size(gradient, obj_value, tSigma1, tSigma2, d)
+            gradient = self.gradient_func(R, P, tSigma1_orig, tSigma2_orig, d)
+            t = self._compute_optimal_step_size(gradient, obj_value, wSigma1, wSigma2, d)
 
             # TODO: Figure out what the line search algorithm should be.
             if t != 0:
                 U = expm(t * gradient)
                 R = np.dot(U, R)
 
-                tSigma1 = left_right_multiply_covariance(tSigma1, U)
-                tSigma2 = left_right_multiply_covariance(tSigma2, U)
+                tSigma1_orig = left_right_multiply_covariance(tSigma1_orig, U)
+                tSigma2_orig = left_right_multiply_covariance(tSigma2_orig, U)
 
             # TODO: I don't think you need the abs, because the objective
             # function should keep increasing each iteration.
@@ -75,6 +71,9 @@ class KLDivergenceSpatialFilter(DivergenceFrameworkSpatialFiltering):
                 break
 
             prev_obj_value = obj_value
+
+            if self.verbose:
+                print "Iteration {}/{}; Objective: {}".format(i+1, self.n_iter, prev_obj_value)
 
         # Take first `d' eigenvectors
         Sigma1 = np.mean(tSigma1, axis=0) # TODO: not sure if correct to average across trials here
@@ -94,10 +93,11 @@ class KLDivergenceSpatialFilter(DivergenceFrameworkSpatialFiltering):
 
         # grad_matrix should be skew symmetric
         assert np.allclose(grad_matrix + grad_matrix.T, np.zeros(grad_matrix.shape))
-        search_direction = grad_matrix / (0.5*np.linalg.norm(grad_matrix, "fro"))
+        #search_direction = grad_matrix / (0.5*np.linalg.norm(grad_matrix, "fro"))
         t = 1.
         alpha = 0.95
         for i in range(self.line_search_n_iter):
+            assert np.allclose(t*grad_matrix + t*grad_matrix.T, np.zeros(grad_matrix.shape))
             R = expm(t*grad_matrix)
 
             obj_value = self.objective_func(R, tSigma1, tSigma2, d)
